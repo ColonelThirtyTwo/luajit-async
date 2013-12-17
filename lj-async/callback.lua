@@ -114,7 +114,7 @@ end
 
 --- Frees the callback object and associated callback.
 function Callback:free()
-	if self.L then
+	if self.L ~= nil then
 		-- TODO: Do we need to free the callback, or will lua_close free it for us?
 		C.lua_close(self.L)
 		self.L = nil
