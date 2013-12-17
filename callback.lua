@@ -26,23 +26,9 @@ local callback_setup_func = string.dump(function(cbtype, cbsource)
 end)
 
 ffi.cdef[[
-	static const int LUA_REGISTRYINDEX  = -10000;
-	static const int LUA_ENVIRONINDEX   = -10001;
 	static const int LUA_GLOBALSINDEX   = -10002;
 	
-	static const int LUA_TNONE         = -1;
-	static const int LUA_TNIL          =  0;
-	static const int LUA_TBOOLEAN      =  1;
-	static const int LUA_TLIGHTUSERDAT =  2;
-	static const int LUA_TNUMBER       =  3;
-	static const int LUA_TSTRING       =  4;
-	static const int LUA_TTABLE        =  5;
-	static const int LUA_TFUNCTION     =  6;
-	static const int LUA_TUSERDATA     =  7;
-	static const int LUA_TTHREAD       =  8;
-	
 	typedef struct lua_State lua_State;
-	typedef double lua_Number;
 	typedef ptrdiff_t lua_Integer;
 	
 	lua_State* luaL_newstate(void);
@@ -51,23 +37,11 @@ ffi.cdef[[
 	void lua_call(lua_State *L, int nargs, int nresults);
 	void lua_checkstack (lua_State *L, int sz);
 	void lua_settop (lua_State *L, int index);
-	int lua_type (lua_State *L, int index);
-	
-	void  lua_pushnil (lua_State *L);
-	void  lua_pushnumber (lua_State *L, lua_Number n);
-	void  lua_pushinteger (lua_State *L, lua_Integer n);
 	void  lua_pushlstring (lua_State *L, const char *s, size_t l);
-	void  lua_pushstring (lua_State *L, const char *s);
-	void  lua_pushboolean (lua_State *L, int b);
-	void  lua_pushlightuserdata (lua_State *L, void *p);
-	
 	void lua_gettable (lua_State *L, int idx);
 	void lua_getfield (lua_State *L, int idx, const char *k);
-	void lua_rawget (lua_State *L, int idx);
-	void lua_rawgeti (lua_State *L, int idx, int n);
 	void lua_settop(lua_State*, int);
 	lua_Integer lua_tointeger (lua_State *L, int index);
-	const char *lua_tolstring (lua_State *L, int index, size_t *len);
 	int lua_isnumber(lua_State*,int);
 ]]
 
@@ -84,7 +58,8 @@ Callback.__index = Callback
 --
 -- The function is (re)created in a separate Lua state; thus, no Lua values may be shared.
 -- The only way to share information between the main Lua state and the callback is by a
--- userdata pointer in the callback function.
+-- userdata pointer in the callback function, which you will need to synchronize
+-- yourself.
 --
 -- The returned object must be kept alive for as long as the callback may still be called.
 -- 
