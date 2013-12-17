@@ -47,7 +47,8 @@ local ffi = require "ffi"
 ...
 
 local MyCallback = MyCallback_t(function(userdata)
-	userdata = ffi.cast("int[1]", userdata) -- BAD! ffi is an upvalue and not preserved by string.dump!
+	local ffi = require "ffi" -- Import FFI in the new state
+	userdata = ffi.cast("int[1]", userdata) -- This will now work
 	...
 end)
 ```
