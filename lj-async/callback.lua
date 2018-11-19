@@ -16,6 +16,7 @@ local callback_setup_func = string.dump(function(cbtype, cbsource)
 	local cb = ffi.cast(cbtype, function(...)
 		local ok, val = xpcall(cbfunc, xpcall_hook, ...)
 		if not ok then
+			print("error in callback",val)
 			error(val, 0)
 		else
 			return val
@@ -35,6 +36,7 @@ ffi.cdef[[
 	void luaL_openlibs(lua_State *L);
 	void lua_close (lua_State *L);
 	void lua_call(lua_State *L, int nargs, int nresults);
+	int lua_pcall (lua_State *L, int nargs, int nresults, int errfunc);
 	void lua_checkstack (lua_State *L, int sz);
 	void lua_settop (lua_State *L, int index);
 	void  lua_pushlstring (lua_State *L, const char *s, size_t l);
@@ -43,6 +45,8 @@ ffi.cdef[[
 	void lua_settop(lua_State*, int);
 	lua_Integer lua_tointeger (lua_State *L, int index);
 	int lua_isnumber(lua_State*,int);
+	const char *lua_tostring (lua_State *L, int index);
+	const char *lua_tolstring (lua_State *L, int index, size_t *len);
 ]]
 
 -- Maps callback object ctypes to the callback pointer types
@@ -66,6 +70,13 @@ Callback.__index = Callback
 -- Errors in callbacks are not caught; thus, they will cause its Lua state's panic function
 -- to run and terminate the process.
 function Callback:__new(callback_func)
+
+	local name,val = debug.getupvalue(callback_func,1)
+
+	if name then
+		print("callback function has upvalue ",name)
+		error("upvalues in callback")
+	end
 	local obj = ffi.new(self)
 	local cbtype = assert(ctype2cbstr[tonumber(self)])
 	
@@ -94,8 +105,13 @@ function Callback:__new(callback_func)
 	-- Load the actual callback
 	C.lua_pushlstring(L, cbtype, #cbtype)
 	C.lua_pushlstring(L, callback_func, #callback_func)
-	C.lua_call(L,2,2)
-	
+	local ret = C.lua_pcall(L,2,2,0)
+
+	if ret > 0 then
+		print(ffi.string(C.lua_tolstring(L,1,nil)))
+		error("error making callback",2)
+		return nil
+	end
 	-- Get and pop the callback function pointer
 	assert(C.lua_isnumber(L,2) ~= 0)
 	local ptr = C.lua_tointeger(L,2)
