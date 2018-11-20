@@ -19,8 +19,8 @@ setmetatable(Thread, {__call=function(self,...) return self.new(...) end})
 if ffi.os == "Windows" then
 	ffi.cdef[[
 		static const int STILL_ACTIVE = 259;
-		static const int FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
-		static const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200;
+		//static const int FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
+		//static const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200;
 		static const int WAIT_ABANDONED = 0x00000080;
 		static const int WAIT_OBJECT_0 = 0x00000000;
 		static const int WAIT_TIMEOUT = 0x00000102;

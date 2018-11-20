@@ -7,19 +7,27 @@ local C = ffi.C
 -- Setup function ran by the Lua state to create
 local callback_setup_func = string.dump(function(cbtype, cbsource)
 	local ffi = _G.require("ffi")
-	local cbfunc = _G.loadstring(cbsource)
+	local initfunc = _G.loadstring(cbsource)
 	
 	local xpcall, dtraceback, tostring, error = _G.xpcall, _G.debug.traceback, _G.tostring, _G.error
 	
 	local xpcall_hook = function(err) return dtraceback(tostring(err) or "<nonstring error>") end
-	
+
+	local cbfunc = initfunc()
+	local waserror = false
 	local cb = ffi.cast(cbtype, function(...)
+		if not waserror then
 		local ok, val = xpcall(cbfunc, xpcall_hook, ...)
 		if not ok then
 			print("error in callback",val)
-			error(val, 0)
+			--error(val, 0)
+			waserror = true
+			return 0
 		else
 			return val
+		end
+		else
+			return 0
 		end
 	end)
 	
@@ -71,16 +79,15 @@ Callback.__index = Callback
 -- to run and terminate the process.
 function Callback:__new(callback_func)
 
-	local name,val = debug.getupvalue(callback_func,1)
-
-	if name then
-		print("callback function has upvalue ",name)
-		error("upvalues in callback")
-	end
 	local obj = ffi.new(self)
 	local cbtype = assert(ctype2cbstr[tonumber(self)])
 	
 	if type(callback_func) == "function" then
+		local name,val = debug.getupvalue(callback_func,1)
+		if name then
+			print("init callback function has upvalue ",name)
+			error("upvalues in init callback")
+		end
 		callback_func = string.dump(callback_func)
 	end
 	
