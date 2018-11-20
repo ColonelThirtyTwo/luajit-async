@@ -18,7 +18,12 @@ To create a callback ctype, call the function with the string ctype: `local MyCa
 Now that you've created the ctype, you can now create a callback.
 
 ```lua
-local MyCallback = MyCallback_t(function(n) print(n) end)
+local MyCallback = MyCallback_t(function()
+	-- can init things here
+	return function(n) 
+		print(n) 
+	end 
+end)
 local MyCallback_funcptr = MyCallback:funcptr() -- Get the actual callback
 MyCallback_funcptr(123) -- Prints 123
 MyCallback:free() -- Destroy the callback and the Lua state.
@@ -32,10 +37,10 @@ local ffi = require "ffi"
 
 ...
 
-local MyCallback = MyCallback_t(function(userdata)
+local MyCallback = MyCallback_t(function() return function(userdata)
 	userdata = ffi.cast("int[1]", userdata) -- BAD! ffi is an upvalue and not preserved by string.dump!
 	...
-end)
+end end)
 ```
 
 You will have to re-require needed libraries in the function.
@@ -46,8 +51,10 @@ local ffi = require "ffi"
 
 ...
 
-local MyCallback = MyCallback_t(function(userdata)
+local MyCallback = MyCallback_t(function()
 	local ffi = require "ffi" -- Import FFI in the new state
+	return function(userdata)
+	
 	userdata = ffi.cast("int[1]", userdata) -- This will now work
 	...
 end)
