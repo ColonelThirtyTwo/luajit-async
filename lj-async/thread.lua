@@ -59,7 +59,7 @@ if ffi.os == "Windows" then
 	
 	local function error_win(lvl)
 		local errcode = C.GetLastError()
-		local str = str_b(1024)
+		local str = ffi.new("char[?]",1024)
 		local FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000
 		local FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200
 		local numout = C.FormatMessageA(bit.bor(FORMAT_MESSAGE_FROM_SYSTEM,
